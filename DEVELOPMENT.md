@@ -43,9 +43,11 @@ mockData.ts → HomeScreen → Components
 **Purpose**: Animated background showing ocean waves and sand
 
 **Props**:
+
 - `tideLevel` (0-100): Controls wave height
 
 **Animation Logic**:
+
 ```typescript
 // Maps tide level to screen position
 waterHeight = interpolate(tideLevel, {
@@ -55,6 +57,7 @@ waterHeight = interpolate(tideLevel, {
 ```
 
 **Visual Layers**:
+
 1. Sand gradient (bottom, static)
 2. Ocean gradient (top, animated height)
 3. Wave overlay (subtle movement)
@@ -65,6 +68,7 @@ waterHeight = interpolate(tideLevel, {
 **Purpose**: Shows current station and tide information
 
 **Features**:
+
 - iOS 26 glass design with BlurView
 - Displays: station name, location, tide status, height, level
 - Auto-updates when station changes
@@ -74,6 +78,7 @@ waterHeight = interpolate(tideLevel, {
 **Purpose**: Search and select tide stations
 
 **Features**:
+
 - Glass-styled search input
 - Live filtering of stations
 - Dropdown results with blur effect
@@ -95,11 +100,13 @@ const [tideData, setTideData] = useState<TideData>(getMockTideData(MOCK_STATIONS
 For larger apps, consider:
 
 **Option 1: Context API** (lightweight, built-in)
+
 ```typescript
 const TideContext = createContext<TideContextType>(null);
 ```
 
 **Option 2: Zustand** (simple, minimal boilerplate)
+
 ```typescript
 const useTideStore = create((set) => ({
   station: MOCK_STATIONS[0],
@@ -108,6 +115,7 @@ const useTideStore = create((set) => ({
 ```
 
 **Option 3: Redux Toolkit** (complex apps, DevTools)
+
 ```typescript
 const tideSlice = createSlice({
   name: 'tide',
@@ -138,10 +146,7 @@ Example using NOAA API:
 // src/services/tideApi.ts
 const NOAA_API = 'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter';
 
-export async function fetchTideData(
-  stationId: string,
-  date: Date
-): Promise<TideData> {
+export async function fetchTideData(stationId: string, date: Date): Promise<TideData> {
   const params = new URLSearchParams({
     product: 'predictions',
     application: 'TideApp',
@@ -313,16 +318,19 @@ Animated.timing(waterHeightAnim, {
 ## Platform-Specific Notes
 
 ### iOS
+
 - BlurView works natively with best performance
 - Test on both simulator and device (blur looks different)
 - Use iOS 16+ for best glass effects
 
 ### Android
+
 - BlurView uses `setBlurEnabled` on Android 12+
 - Earlier versions fall back to tinted background
 - Test on various Android versions
 
 ### Web
+
 - Uses CSS `backdrop-filter` for blur
 - Some browsers don't support backdrop-filter
 - Fallback: semi-transparent background
@@ -332,6 +340,7 @@ Animated.timing(waterHeightAnim, {
 ### "Invariant Violation" errors
 
 Clear cache and rebuild:
+
 ```bash
 expo start -c
 ```
@@ -339,6 +348,7 @@ expo start -c
 ### Blur not working
 
 Install native modules:
+
 ```bash
 npx expo install expo-blur
 npx expo prebuild --clean
@@ -347,6 +357,7 @@ npx expo prebuild --clean
 ### TypeScript errors
 
 Regenerate types:
+
 ```bash
 npx expo customize tsconfig.json
 ```

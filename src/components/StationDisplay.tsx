@@ -19,10 +19,7 @@ interface StationDisplayProps {
  *
  * The component adapts across platforms while maintaining the glass aesthetic.
  */
-export const StationDisplay: React.FC<StationDisplayProps> = ({
-  station,
-  tideData,
-}) => {
+export const StationDisplay: React.FC<StationDisplayProps> = ({ station, tideData }) => {
   const getTideStatusText = () => {
     switch (tideData.type) {
       case 'high':
