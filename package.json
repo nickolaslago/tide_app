@@ -1,7 +1,7 @@
 {
   "name": "tide-app",
   "version": "1.0.0",
-  "main": "expo-router/entry",
+  "main": "expo/AppEntry.js",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -21,7 +21,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
-    "@types/react": "~18.3.12",
+    "@types/react": "~19.1.10",
     "typescript": "^5.3.3"
   },
   "private": true
