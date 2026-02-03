@@ -53,9 +53,7 @@ export const getMockTideData = (stationId: string): TideData => {
 
   // Create a simple sine wave pattern for realistic tide simulation
   // Tides typically have ~12.4 hour cycles (semi-diurnal)
-  const tideLevel = Math.round(
-    50 + 45 * Math.sin((hour * Math.PI) / 6)
-  );
+  const tideLevel = Math.round(50 + 45 * Math.sin((hour * Math.PI) / 6));
 
   // Calculate height in meters (typically ranges from -1 to 3 meters)
   const height = (tideLevel / 100) * 4 - 1;

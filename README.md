@@ -15,7 +15,7 @@ A minimal, production-ready React Native + Expo tide information app with iOS 26
 
 ## Tech Stack
 
-- **Expo** (~52.0.0)
+- **Expo** (^54.0.33)
 - **React Native** (0.76.5)
 - **TypeScript** (5.3.3)
 - **expo-blur**: For glass/frosted effects
@@ -130,6 +130,7 @@ The app follows modern iOS design principles:
 - **Platform Adaptation**: Different blur intensities and background opacities for iOS, Android, and Web
 
 Implementation examples:
+
 - `src/components/StationDisplay.tsx` - Glass card for station info
 - `src/components/StationSearch.tsx` - Glass search interface
 
@@ -173,16 +174,19 @@ Implementation examples:
 ### Common Issues
 
 **"Unable to resolve module expo-blur"**
+
 ```bash
 npm install expo-blur expo-linear-gradient
 ```
 
 **"Invariant Violation: requireNativeComponent: ExpoLinearGradient was not found"**
+
 ```bash
 expo prebuild --clean
 ```
 
 **Assets not loading**
+
 - Ensure you're running the app with `npm start`
 - Clear cache: `expo start -c`
 

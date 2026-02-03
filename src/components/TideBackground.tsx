@@ -11,7 +11,7 @@ interface TideBackgroundProps {
   tideLevel: number;
 }
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 /**
  * TideBackground Component
@@ -42,6 +42,8 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
       duration: 2000,
       useNativeDriver: false, // Cannot use native driver for layout animations
     }).start();
+    // waterHeightAnim is a ref and should not be in dependencies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tideLevel]);
 
   // Interpolate the animated value to actual screen position
@@ -70,6 +72,8 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
         }),
       ])
     ).start();
+    // waveAnimation is a ref and should not be in dependencies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const waveTranslate = waveAnimation.interpolate({
@@ -80,10 +84,7 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
   return (
     <View style={styles.container}>
       {/* Sand layer - always at bottom */}
-      <LinearGradient
-        colors={['#F4E4C1', '#E6D5A8', '#D4C59A']}
-        style={styles.sand}
-      />
+      <LinearGradient colors={['#F4E4C1', '#E6D5A8', '#D4C59A']} style={styles.sand} />
 
       {/* Ocean water layer - animated height */}
       <Animated.View

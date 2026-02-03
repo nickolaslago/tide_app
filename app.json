@@ -9,9 +9,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#4A90E2"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.tideapp"
