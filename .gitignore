@@ -2,6 +2,8 @@
 .expo/
 dist/
 web-build/
+ios/
+android/
 
 # Node
 node_modules/
