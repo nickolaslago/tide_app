@@ -199,7 +199,7 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
     <View style={styles.container}>
       {/* Sand layer - always at bottom */}
       <LinearGradient colors={['#F4E4C1', '#E6D5A8', '#D4C59A']} style={styles.sand} />
-
+      {/*TO DO: change the straight line division from sand to sea to a wave form*/}
       {/* Ocean water layer - animated height */}
       <Animated.View
         style={[
@@ -217,7 +217,7 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
 
         {/* 4 overlapping SVG wave layers for vertical parallax motion */}
         {/* Waves move downward simulating water rolling onto sand from overhead view */}
-
+        {/* TO DO: the animation once finishes, should play itself reverse and continue with this loop */}
         {/* Wave 4: Darkest layer (#005a99) - slowest movement, deepest water */}
         <Animated.View
           style={[
@@ -262,7 +262,7 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
             <Path d={generateWavePath(25, 2, SCREEN_HEIGHT * 0.3)} fill="#a2d9ff" />
           </Svg>
         </Animated.View>
-
+        {/*TO DO: The lightest layer should never reach the top of the screen during the loop, unless the tide level is below 20% */}
         {/* Wave 1: Lightest layer (#d4f1ff) - fastest movement, closest to shore */}
         <Animated.View
           style={[
