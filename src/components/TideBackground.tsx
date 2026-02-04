@@ -79,6 +79,9 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
   const wave3Anim = useRef(new Animated.Value(0)).current;
   const wave4Anim = useRef(new Animated.Value(0)).current;
 
+  // Animation for the bottom edge wave (±5% flexibility)
+  const bottomEdgeAnim = useRef(new Animated.Value(0)).current;
+
   useEffect(() => {
     // Skip animations if reduced motion is enabled
     if (isReducedMotionEnabled) {
@@ -161,47 +164,88 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
       ])
     );
 
+    // Bottom edge wave animation: creates ±5% flexibility in sand/sea division
+    // Simulates waves lapping at the shore
+    const bottomEdgeAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(bottomEdgeAnim, {
+          toValue: 1,
+          duration: 3000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(bottomEdgeAnim, {
+          toValue: -1,
+          duration: 3000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(bottomEdgeAnim, {
+          toValue: 0,
+          duration: 3000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
     wave1Animation.start();
     wave2Animation.start();
     wave3Animation.start();
     wave4Animation.start();
+    bottomEdgeAnimation.start();
 
     return () => {
       wave1Animation.stop();
       wave2Animation.stop();
       wave3Animation.stop();
       wave4Animation.stop();
+      bottomEdgeAnimation.stop();
     };
     // Animations are refs and should not be in dependencies
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isReducedMotionEnabled]);
 
+  // Calculate actual water height based on tide level (for percentage-based animations)
+  // Water height ranges from 20% (low tide) to 100% (high tide) of screen
+  const actualWaterHeight = SCREEN_HEIGHT * (0.2 + (tideLevel / 100) * 0.8);
+
   // Interpolate wave positions for vertical movement (top to bottom)
-  // Each wave scrolls downward for seamless looping - simulating water rolling onto sand
+  // Each wave scrolls based on percentage of actual water height, not fixed screen height
+  // This prevents excessive wave movement at low tide levels
 
   // Calculate max translation for lightest wave based on tide level
   // When tideLevel < 20, allow full movement (wave can reach top)
   // When tideLevel >= 20, constrain movement so wave doesn't reach top of screen
-  const wave1MaxTranslation = tideLevel < 20 ? -SCREEN_HEIGHT : -SCREEN_HEIGHT * 0.3;
+  const wave1MaxTranslation = tideLevel < 20
+    ? -actualWaterHeight * 0.5
+    : -actualWaterHeight * 0.15;
 
   const wave1TranslateY = wave1Anim.interpolate({
     inputRange: [0, 1],
     outputRange: [0, wave1MaxTranslation],
   });
 
+  // Wave translations use percentage of actual water height for proportional movement
   const wave2TranslateY = wave2Anim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -SCREEN_HEIGHT],
+    outputRange: [0, -actualWaterHeight * 0.4],
   });
 
   const wave3TranslateY = wave3Anim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -SCREEN_HEIGHT],
+    outputRange: [0, -actualWaterHeight * 0.35],
   });
 
   const wave4TranslateY = wave4Anim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -SCREEN_HEIGHT],
+    outputRange: [0, -actualWaterHeight * 0.3],
+  });
+
+  // Bottom edge wave translation: ±5% of screen height for realistic wave lapping
+  const bottomEdgeTranslateY = bottomEdgeAnim.interpolate({
+    inputRange: [-1, 0, 1],
+    outputRange: [-SCREEN_HEIGHT * 0.05, 0, SCREEN_HEIGHT * 0.05],
   });
 
   // Generate SVG path for the bottom edge wave (sand to sea transition)
@@ -348,12 +392,13 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
       </Animated.View>
 
       {/* Bottom edge wave - creates wavy transition from sea to sand */}
-      {/* Positioned outside waterContainer to allow overflow, follows water height */}
+      {/* Positioned outside waterContainer, follows water height with ±5% animation */}
       <Animated.View
         style={[
           styles.bottomEdgeWaveContainer,
           {
             top: waterHeight,
+            transform: [{ translateY: bottomEdgeTranslateY }],
           },
         ]}
       >
