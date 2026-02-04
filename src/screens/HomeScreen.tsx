@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, SafeAreaView, StatusBar } from 'react-native';
+import { StyleSheet, View, SafeAreaView, StatusBar, TextInput, Text } from 'react-native';
 import { TideBackground } from '../components/TideBackground';
 import { StationDisplay } from '../components/StationDisplay';
 import { StationSearch } from '../components/StationSearch';
@@ -29,6 +29,25 @@ export const HomeScreen: React.FC = () => {
   const [currentStation, setCurrentStation] = useState<TideStation>(MOCK_STATIONS[0]);
   const [tideData, setTideData] = useState<TideData>(getMockTideData(MOCK_STATIONS[0].id));
 
+  // Test tide level input (for debugging/testing wave animations)
+  const [testTideLevel, setTestTideLevel] = useState<string>('');
+  const [useTestTide, setUseTestTide] = useState(false);
+
+  const handleTideLevelChange = (value: string) => {
+    setTestTideLevel(value);
+    const numValue = parseInt(value, 10);
+    if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
+      setUseTestTide(true);
+    } else if (value === '') {
+      setUseTestTide(false);
+    }
+  };
+
+  // Determine which tide level to use (test override or actual data)
+  const displayTideLevel = useTestTide && testTideLevel !== ''
+    ? Math.min(100, Math.max(0, parseInt(testTideLevel, 10) || 0))
+    : tideData.tideLevel;
+
   // Update tide data when station changes
   useEffect(() => {
     // In production, this would be an API call:
@@ -56,12 +75,29 @@ export const HomeScreen: React.FC = () => {
       <StatusBar barStyle="dark-content" />
 
       {/* Animated background - controlled by tide level */}
-      <TideBackground tideLevel={tideData.tideLevel} />
+      <TideBackground tideLevel={displayTideLevel} />
 
       {/* Safe area for notch/status bar */}
       <SafeAreaView style={styles.safeArea}>
         {/* Station name and info display - top */}
         <StationDisplay station={currentStation} tideData={tideData} />
+
+        {/* Test tide level input - for testing wave animations */}
+        <View style={styles.tideInputContainer}>
+          <Text style={styles.tideInputLabel}>Test Tide Level (0-100):</Text>
+          <TextInput
+            style={styles.tideInput}
+            value={testTideLevel}
+            onChangeText={handleTideLevelChange}
+            placeholder="Enter tide level"
+            placeholderTextColor="#999"
+            keyboardType="numeric"
+            maxLength={3}
+          />
+          {useTestTide && (
+            <Text style={styles.tideInputActive}>Active: {displayTideLevel}%</Text>
+          )}
+        </View>
 
         {/* Station search - bottom */}
         <StationSearch
@@ -80,5 +116,38 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+  },
+  tideInputContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    marginHorizontal: 16,
+    marginBottom: 8,
+    padding: 12,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
+  tideInputLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#333',
+    marginRight: 8,
+  },
+  tideInput: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    fontSize: 16,
+    width: 80,
+    textAlign: 'center',
+  },
+  tideInputActive: {
+    marginLeft: 12,
+    fontSize: 14,
+    color: '#0099ff',
+    fontWeight: '600',
   },
 });
