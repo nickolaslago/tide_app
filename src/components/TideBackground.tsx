@@ -249,59 +249,88 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
   });
 
   // Generate SVG path for the bottom edge wave (sand to sea transition)
-  // Creates a wavy bottom edge instead of a straight line
-  const generateBottomEdgeWavePath = (amplitude: number, frequency: number) => {
+  // Creates wavy edges on BOTH top and bottom (no straight lines)
+  // Made larger to cover ±5% animation range without showing sand
+  const generateBottomEdgeWavePath = (
+    amplitude: number,
+    frequency: number,
+    height: number
+  ) => {
     const points = [];
     const segments = 60;
     const width = SCREEN_WIDTH;
+    const topFreq = frequency * 1.2; // Different frequency for top edge
 
-    // Start at top-left of the wave area
-    points.push(`M 0,0`);
-    // Go to bottom-left
-    points.push(`L 0,${amplitude * 2}`);
-
-    // Create the wavy bottom edge
+    // TOP edge - wavy (this is where it connects with the water)
     for (let i = 0; i <= segments; i++) {
       const x = (i / segments) * width;
-      const y = amplitude + amplitude * Math.sin((i / segments) * Math.PI * 2 * frequency);
+      const y = amplitude + amplitude * Math.sin((i / segments) * Math.PI * 2 * topFreq);
+      points.push(`${i === 0 ? 'M' : 'L'} ${x},${y}`);
+    }
+
+    // BOTTOM edge - wavy (this extends into the sand)
+    for (let i = segments; i >= 0; i--) {
+      const x = (i / segments) * width;
+      const y = height - amplitude + amplitude * Math.sin((i / segments) * Math.PI * 2 * frequency + Math.PI);
       points.push(`L ${x},${y}`);
     }
 
-    // Go up to top-right and close
-    points.push(`L ${width},0`);
     points.push('Z');
 
     return points.join(' ');
   };
 
   // Generate SVG path data for horizontal wave shapes that tile vertically
-  // Creates smooth sinusoidal waves spanning the screen width, repeating for seamless vertical looping
-  const generateWavePath = (amplitude: number, frequency: number, yOffset: number) => {
+  // Creates smooth sinusoidal waves on BOTH top and bottom edges (no straight lines)
+  // Repeating pattern for seamless vertical looping
+  const generateWavePath = (
+    amplitude: number,
+    frequency: number,
+    yOffset: number,
+    bottomAmplitude?: number,
+    bottomFrequency?: number
+  ) => {
     const points = [];
     const segments = 50;
     const width = SCREEN_WIDTH;
-    const totalHeight = SCREEN_HEIGHT * 2; // Double height for seamless vertical looping
+    const bAmp = bottomAmplitude ?? amplitude;
+    const bFreq = bottomFrequency ?? frequency * 0.8; // Slightly different frequency for natural look
 
-    // First wave at yOffset position
+    // First wave - TOP edge at yOffset position (wavy)
     for (let i = 0; i <= segments; i++) {
       const x = (i / segments) * width;
-      // Create horizontal wave with sinusoidal variation
       const y = yOffset + amplitude * Math.sin((i / segments) * Math.PI * 2 * frequency);
       points.push(`${i === 0 ? 'M' : 'L'} ${x},${y}`);
     }
 
-    // Extend down to fill the area, then across, then up to the second wave
-    points.push(`L ${width},${yOffset + SCREEN_HEIGHT}`);
-
-    // Second wave at yOffset + SCREEN_HEIGHT (for seamless vertical tiling)
+    // First wave - BOTTOM edge (wavy, not straight)
+    const bottomY1 = yOffset + SCREEN_HEIGHT;
     for (let i = segments; i >= 0; i--) {
       const x = (i / segments) * width;
-      const y = yOffset + SCREEN_HEIGHT + amplitude * Math.sin((i / segments) * Math.PI * 2 * frequency);
+      const y = bottomY1 + bAmp * Math.sin((i / segments) * Math.PI * 2 * bFreq + Math.PI); // Phase shift for variation
       points.push(`L ${x},${y}`);
     }
 
-    // Close the path back to start
-    points.push(`L 0,${yOffset}`);
+    // Close the first wave shape
+    points.push('Z');
+
+    // Second wave (for seamless tiling) - TOP edge at yOffset + SCREEN_HEIGHT (wavy)
+    const topY2 = yOffset + SCREEN_HEIGHT;
+    points.push(`M 0,${topY2 + bAmp * Math.sin(Math.PI)}`); // Start matches bottom of first wave
+    for (let i = 0; i <= segments; i++) {
+      const x = (i / segments) * width;
+      const y = topY2 + bAmp * Math.sin((i / segments) * Math.PI * 2 * bFreq + Math.PI);
+      points.push(`L ${x},${y}`);
+    }
+
+    // Second wave - BOTTOM edge (wavy)
+    const bottomY2 = yOffset + SCREEN_HEIGHT * 2;
+    for (let i = segments; i >= 0; i--) {
+      const x = (i / segments) * width;
+      const y = bottomY2 + amplitude * Math.sin((i / segments) * Math.PI * 2 * frequency);
+      points.push(`L ${x},${y}`);
+    }
+
     points.push('Z');
 
     return points.join(' ');
@@ -392,6 +421,7 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
       </Animated.View>
 
       {/* Bottom edge wave - creates wavy transition from sea to sand */}
+      {/* Larger size to cover ±5% animation range without showing sand */}
       {/* Positioned outside waterContainer, follows water height with ±5% animation */}
       <Animated.View
         style={[
@@ -402,8 +432,8 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
           },
         ]}
       >
-        <Svg height={60} width={SCREEN_WIDTH} style={styles.bottomEdgeWave}>
-          <Path d={generateBottomEdgeWavePath(25, 3)} fill="#d4f1ff" />
+        <Svg height={SCREEN_HEIGHT * 0.18} width={SCREEN_WIDTH} style={styles.bottomEdgeWave}>
+          <Path d={generateBottomEdgeWavePath(30, 3, SCREEN_HEIGHT * 0.18)} fill="#d4f1ff" />
         </Svg>
       </Animated.View>
     </View>
@@ -439,8 +469,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    height: 60,
-    marginTop: -30, // Overlap with the water container to create seamless wave edge
+    height: SCREEN_HEIGHT * 0.18, // 18% of screen height to cover ±5% animation range
+    marginTop: -SCREEN_HEIGHT * 0.07, // Overlap with water container for seamless connection
   },
   bottomEdgeWave: {
     position: 'absolute',
