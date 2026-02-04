@@ -432,8 +432,8 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
           },
         ]}
       >
-        <Svg height={SCREEN_HEIGHT * 0.18} width={SCREEN_WIDTH} style={styles.bottomEdgeWave}>
-          <Path d={generateBottomEdgeWavePath(30, 3, SCREEN_HEIGHT * 0.18)} fill="#d4f1ff" />
+        <Svg height={SCREEN_HEIGHT * 0.35} width={SCREEN_WIDTH} style={styles.bottomEdgeWave}>
+          <Path d={generateBottomEdgeWavePath(35, 3, SCREEN_HEIGHT * 0.35)} fill="#d4f1ff" />
         </Svg>
       </Animated.View>
     </View>
@@ -469,8 +469,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    height: SCREEN_HEIGHT * 0.18, // 18% of screen height to cover ±5% animation range
-    marginTop: -SCREEN_HEIGHT * 0.07, // Overlap with water container for seamless connection
+    height: SCREEN_HEIGHT * 0.35, // 35% of screen height to fully cover ±5% animation range
+    marginTop: -SCREEN_HEIGHT * 0.12, // Overlap with water container for seamless connection
   },
   bottomEdgeWave: {
     position: 'absolute',
