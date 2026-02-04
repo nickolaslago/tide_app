@@ -20,13 +20,13 @@ const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
  * This component creates an animated background that visually represents tide levels
  * with realistic wave motion simulating ocean from an aerial view.
  *
- * The ocean waves move horizontally based on the tideLevel prop:
+ * The ocean waves move vertically based on the tideLevel prop:
  * - At low tide (0), the water level is positioned at the top of the screen
  * - At high tide (100), the water extends to the bottom of the screen
  *
  * Wave Animation Features:
  * - 4 overlapping SVG wave layers for depth and parallax effect
- * - Horizontal wave movement simulating ocean currents from aerial perspective
+ * - Vertical wave movement simulating ocean rolling toward shore from aerial perspective
  * - Varying speeds per layer (8s, 10s, 12s, 14s) for realistic parallax motion
  * - Color palette: #d4f1ff (lightest), #a2d9ff, #0099ff, #005a99 (darkest)
  * - Opacities range from 0.6 to 1.0 for visual depth
@@ -72,7 +72,7 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
     outputRange: [SCREEN_HEIGHT * 0.2, SCREEN_HEIGHT], // 20% at low tide, 100% at high tide
   });
 
-  // Create 4 wave animations for horizontal parallax motion
+  // Create 4 wave animations for vertical parallax motion
   const wave1Anim = useRef(new Animated.Value(0)).current;
   const wave2Anim = useRef(new Animated.Value(0)).current;
   const wave3Anim = useRef(new Animated.Value(0)).current;
@@ -139,26 +139,26 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isReducedMotionEnabled]);
 
-  // Interpolate wave positions for horizontal movement
-  // Each wave moves across the full screen width for seamless looping
-  const wave1TranslateX = wave1Anim.interpolate({
+  // Interpolate wave positions for vertical movement
+  // Each wave moves down the full screen height for seamless looping
+  const wave1TranslateY = wave1Anim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -SCREEN_WIDTH],
+    outputRange: [0, SCREEN_HEIGHT],
   });
 
-  const wave2TranslateX = wave2Anim.interpolate({
+  const wave2TranslateY = wave2Anim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -SCREEN_WIDTH],
+    outputRange: [0, SCREEN_HEIGHT],
   });
 
-  const wave3TranslateX = wave3Anim.interpolate({
+  const wave3TranslateY = wave3Anim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -SCREEN_WIDTH],
+    outputRange: [0, SCREEN_HEIGHT],
   });
 
-  const wave4TranslateX = wave4Anim.interpolate({
+  const wave4TranslateY = wave4Anim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -SCREEN_WIDTH],
+    outputRange: [0, SCREEN_HEIGHT],
   });
 
   // Generate SVG path data for wave shapes
@@ -202,13 +202,13 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
           style={StyleSheet.absoluteFill}
         />
 
-        {/* 4 overlapping SVG wave layers for horizontal parallax motion */}
+        {/* 4 overlapping SVG wave layers for vertical parallax motion */}
         {/* Wave 4: Darkest layer (#005a99) - slowest movement */}
         <Animated.View
           style={[
             styles.svgWaveLayer,
             {
-              transform: [{ translateX: wave4TranslateX }],
+              transform: [{ translateY: wave4TranslateY }],
               opacity: 1.0,
             },
           ]}
@@ -223,7 +223,7 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
           style={[
             styles.svgWaveLayer,
             {
-              transform: [{ translateX: wave3TranslateX }],
+              transform: [{ translateY: wave3TranslateY }],
               opacity: 0.8,
             },
           ]}
@@ -238,7 +238,7 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
           style={[
             styles.svgWaveLayer,
             {
-              transform: [{ translateX: wave2TranslateX }],
+              transform: [{ translateY: wave2TranslateY }],
               opacity: 0.7,
             },
           ]}
@@ -253,7 +253,7 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
           style={[
             styles.svgWaveLayer,
             {
-              transform: [{ translateX: wave1TranslateX }],
+              transform: [{ translateY: wave1TranslateY }],
               opacity: 0.6,
             },
           ]}
