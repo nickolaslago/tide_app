@@ -18,24 +18,25 @@ const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
  * TideBackground Component
  *
  * This component creates an animated background that visually represents tide levels
- * with realistic wave motion simulating ocean from an aerial view.
+ * with realistic wave motion simulating ocean from an aerial/overhead view.
  *
- * The ocean waves move horizontally based on the tideLevel prop:
+ * The ocean waves move vertically (top to bottom) based on the tideLevel prop:
  * - At low tide (0), the water level is positioned at the top of the screen
  * - At high tide (100), the water extends to the bottom of the screen
  *
  * Wave Animation Features:
  * - 4 overlapping SVG wave layers for depth and parallax effect
- * - Horizontal wave movement creating seamless scrolling ocean motion
+ * - Vertical wave movement (translateY) simulating water rolling onto sand
  * - Varying speeds per layer (8s, 10s, 12s, 14s) for realistic parallax motion
  * - Color gradient: darker at top (#005a99) to lighter at bottom (#d4f1ff)
  * - Opacities range from 0.8 to 0.9 for natural blending
- * - Seamless looping with ease-in-out timing functions
+ * - Seamless vertical looping with ease-in-out timing functions
+ * - Wave shapes preserved throughout animation (no straight lines at borders)
  * - Respects reduced-motion accessibility preferences
  *
  * Visual layers (from top to bottom):
  * 1. Ocean water - moves with tide level, gradient from dark to light
- * 2. Animated SVG wave layers (4 layers with different colors) - simulate ocean motion
+ * 2. Animated SVG wave layers (4 layers with different colors) - simulate ocean rolling motion
  * 3. Sand (beige gradient) - fills remaining space below water
  */
 export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => {
@@ -139,45 +140,56 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isReducedMotionEnabled]);
 
-  // Interpolate wave positions for horizontal movement
-  // Each wave scrolls left across screen width for seamless looping
-  const wave1TranslateX = wave1Anim.interpolate({
+  // Interpolate wave positions for vertical movement (top to bottom)
+  // Each wave scrolls downward for seamless looping - simulating water rolling onto sand
+  const wave1TranslateY = wave1Anim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -SCREEN_WIDTH],
+    outputRange: [0, -SCREEN_HEIGHT],
   });
 
-  const wave2TranslateX = wave2Anim.interpolate({
+  const wave2TranslateY = wave2Anim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -SCREEN_WIDTH],
+    outputRange: [0, -SCREEN_HEIGHT],
   });
 
-  const wave3TranslateX = wave3Anim.interpolate({
+  const wave3TranslateY = wave3Anim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -SCREEN_WIDTH],
+    outputRange: [0, -SCREEN_HEIGHT],
   });
 
-  const wave4TranslateX = wave4Anim.interpolate({
+  const wave4TranslateY = wave4Anim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -SCREEN_WIDTH],
+    outputRange: [0, -SCREEN_HEIGHT],
   });
 
-  // Generate SVG path data for wave shapes
-  // Creates a smooth sinusoidal wave pattern that repeats seamlessly
+  // Generate SVG path data for horizontal wave shapes that tile vertically
+  // Creates smooth sinusoidal waves spanning the screen width, repeating for seamless vertical looping
   const generateWavePath = (amplitude: number, frequency: number, yOffset: number) => {
     const points = [];
     const segments = 50;
     const width = SCREEN_WIDTH;
+    const totalHeight = SCREEN_HEIGHT * 2; // Double height for seamless vertical looping
 
+    // First wave at yOffset position
     for (let i = 0; i <= segments; i++) {
       const x = (i / segments) * width;
-      // Negate the sine wave to make peaks point upward
-      const y = yOffset - amplitude * Math.sin((i / segments) * Math.PI * 2 * frequency);
+      // Create horizontal wave with sinusoidal variation
+      const y = yOffset + amplitude * Math.sin((i / segments) * Math.PI * 2 * frequency);
       points.push(`${i === 0 ? 'M' : 'L'} ${x},${y}`);
     }
 
-    // Close the path to create a filled shape
-    points.push(`L ${width},${SCREEN_HEIGHT}`);
-    points.push(`L 0,${SCREEN_HEIGHT}`);
+    // Extend down to fill the area, then across, then up to the second wave
+    points.push(`L ${width},${yOffset + SCREEN_HEIGHT}`);
+
+    // Second wave at yOffset + SCREEN_HEIGHT (for seamless vertical tiling)
+    for (let i = segments; i >= 0; i--) {
+      const x = (i / segments) * width;
+      const y = yOffset + SCREEN_HEIGHT + amplitude * Math.sin((i / segments) * Math.PI * 2 * frequency);
+      points.push(`L ${x},${y}`);
+    }
+
+    // Close the path back to start
+    points.push(`L 0,${yOffset}`);
     points.push('Z');
 
     return points.join(' ');
@@ -203,19 +215,21 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
           style={StyleSheet.absoluteFill}
         />
 
-        {/* 4 overlapping SVG wave layers for horizontal parallax motion */}
-        {/* Wave 4: Darkest layer (#005a99) - slowest movement */}
+        {/* 4 overlapping SVG wave layers for vertical parallax motion */}
+        {/* Waves move downward simulating water rolling onto sand from overhead view */}
+
+        {/* Wave 4: Darkest layer (#005a99) - slowest movement, deepest water */}
         <Animated.View
           style={[
             styles.svgWaveLayer,
             {
-              transform: [{ translateX: wave4TranslateX }],
+              transform: [{ translateY: wave4TranslateY }],
               opacity: 0.9,
             },
           ]}
         >
-          <Svg height={SCREEN_HEIGHT} width={SCREEN_WIDTH * 2} style={styles.svgContainer}>
-            <Path d={generateWavePath(15, 3, SCREEN_HEIGHT * 0.3)} fill="#005a99" />
+          <Svg height={SCREEN_HEIGHT * 2} width={SCREEN_WIDTH} style={styles.svgContainer}>
+            <Path d={generateWavePath(15, 3, 0)} fill="#005a99" />
           </Svg>
         </Animated.View>
 
@@ -224,13 +238,13 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
           style={[
             styles.svgWaveLayer,
             {
-              transform: [{ translateX: wave3TranslateX }],
+              transform: [{ translateY: wave3TranslateY }],
               opacity: 0.85,
             },
           ]}
         >
-          <Svg height={SCREEN_HEIGHT} width={SCREEN_WIDTH * 2} style={styles.svgContainer}>
-            <Path d={generateWavePath(20, 2.5, SCREEN_HEIGHT * 0.35)} fill="#0099ff" />
+          <Svg height={SCREEN_HEIGHT * 2} width={SCREEN_WIDTH} style={styles.svgContainer}>
+            <Path d={generateWavePath(20, 2.5, SCREEN_HEIGHT * 0.15)} fill="#0099ff" />
           </Svg>
         </Animated.View>
 
@@ -239,27 +253,27 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
           style={[
             styles.svgWaveLayer,
             {
-              transform: [{ translateX: wave2TranslateX }],
+              transform: [{ translateY: wave2TranslateY }],
               opacity: 0.85,
             },
           ]}
         >
-          <Svg height={SCREEN_HEIGHT} width={SCREEN_WIDTH * 2} style={styles.svgContainer}>
-            <Path d={generateWavePath(25, 2, SCREEN_HEIGHT * 0.4)} fill="#a2d9ff" />
+          <Svg height={SCREEN_HEIGHT * 2} width={SCREEN_WIDTH} style={styles.svgContainer}>
+            <Path d={generateWavePath(25, 2, SCREEN_HEIGHT * 0.3)} fill="#a2d9ff" />
           </Svg>
         </Animated.View>
 
-        {/* Wave 1: Lightest layer (#d4f1ff) - fastest movement */}
+        {/* Wave 1: Lightest layer (#d4f1ff) - fastest movement, closest to shore */}
         <Animated.View
           style={[
             styles.svgWaveLayer,
             {
-              transform: [{ translateX: wave1TranslateX }],
+              transform: [{ translateY: wave1TranslateY }],
               opacity: 0.8,
             },
           ]}
         >
-          <Svg height={SCREEN_HEIGHT} width={SCREEN_WIDTH * 2} style={styles.svgContainer}>
+          <Svg height={SCREEN_HEIGHT * 2} width={SCREEN_WIDTH} style={styles.svgContainer}>
             <Path d={generateWavePath(30, 1.5, SCREEN_HEIGHT * 0.45)} fill="#d4f1ff" />
           </Svg>
         </Animated.View>
@@ -287,8 +301,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     left: 0,
-    width: SCREEN_WIDTH * 2, // Double width for seamless looping
-    height: SCREEN_HEIGHT,
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT * 2, // Double height for seamless vertical looping
   },
   svgContainer: {
     position: 'absolute',
