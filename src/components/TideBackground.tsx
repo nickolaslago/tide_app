@@ -86,43 +86,79 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
     }
 
     // Wave 1: Lightest layer (#d4f1ff) - fastest at 8s
+    // Yo-yo animation: plays forward then reverse in a continuous loop
     const wave1Animation = Animated.loop(
-      Animated.timing(wave1Anim, {
-        toValue: 1,
-        duration: 8000,
-        easing: Easing.inOut(Easing.ease),
-        useNativeDriver: true,
-      })
+      Animated.sequence([
+        Animated.timing(wave1Anim, {
+          toValue: 1,
+          duration: 8000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(wave1Anim, {
+          toValue: 0,
+          duration: 8000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
     );
 
     // Wave 2: Light layer (#a2d9ff) - 10s cycle
+    // Yo-yo animation: plays forward then reverse in a continuous loop
     const wave2Animation = Animated.loop(
-      Animated.timing(wave2Anim, {
-        toValue: 1,
-        duration: 10000,
-        easing: Easing.inOut(Easing.ease),
-        useNativeDriver: true,
-      })
+      Animated.sequence([
+        Animated.timing(wave2Anim, {
+          toValue: 1,
+          duration: 10000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(wave2Anim, {
+          toValue: 0,
+          duration: 10000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
     );
 
     // Wave 3: Dark layer (#0099ff) - 12s cycle
+    // Yo-yo animation: plays forward then reverse in a continuous loop
     const wave3Animation = Animated.loop(
-      Animated.timing(wave3Anim, {
-        toValue: 1,
-        duration: 12000,
-        easing: Easing.inOut(Easing.ease),
-        useNativeDriver: true,
-      })
+      Animated.sequence([
+        Animated.timing(wave3Anim, {
+          toValue: 1,
+          duration: 12000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(wave3Anim, {
+          toValue: 0,
+          duration: 12000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
     );
 
     // Wave 4: Darkest layer (#005a99) - slowest at 14s
+    // Yo-yo animation: plays forward then reverse in a continuous loop
     const wave4Animation = Animated.loop(
-      Animated.timing(wave4Anim, {
-        toValue: 1,
-        duration: 14000,
-        easing: Easing.inOut(Easing.ease),
-        useNativeDriver: true,
-      })
+      Animated.sequence([
+        Animated.timing(wave4Anim, {
+          toValue: 1,
+          duration: 14000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(wave4Anim, {
+          toValue: 0,
+          duration: 14000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
     );
 
     wave1Animation.start();
@@ -142,9 +178,15 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
 
   // Interpolate wave positions for vertical movement (top to bottom)
   // Each wave scrolls downward for seamless looping - simulating water rolling onto sand
+
+  // Calculate max translation for lightest wave based on tide level
+  // When tideLevel < 20, allow full movement (wave can reach top)
+  // When tideLevel >= 20, constrain movement so wave doesn't reach top of screen
+  const wave1MaxTranslation = tideLevel < 20 ? -SCREEN_HEIGHT : -SCREEN_HEIGHT * 0.3;
+
   const wave1TranslateY = wave1Anim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -SCREEN_HEIGHT],
+    outputRange: [0, wave1MaxTranslation],
   });
 
   const wave2TranslateY = wave2Anim.interpolate({
@@ -161,6 +203,32 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
     inputRange: [0, 1],
     outputRange: [0, -SCREEN_HEIGHT],
   });
+
+  // Generate SVG path for the bottom edge wave (sand to sea transition)
+  // Creates a wavy bottom edge instead of a straight line
+  const generateBottomEdgeWavePath = (amplitude: number, frequency: number) => {
+    const points = [];
+    const segments = 60;
+    const width = SCREEN_WIDTH;
+
+    // Start at top-left of the wave area
+    points.push(`M 0,0`);
+    // Go to bottom-left
+    points.push(`L 0,${amplitude * 2}`);
+
+    // Create the wavy bottom edge
+    for (let i = 0; i <= segments; i++) {
+      const x = (i / segments) * width;
+      const y = amplitude + amplitude * Math.sin((i / segments) * Math.PI * 2 * frequency);
+      points.push(`L ${x},${y}`);
+    }
+
+    // Go up to top-right and close
+    points.push(`L ${width},0`);
+    points.push('Z');
+
+    return points.join(' ');
+  };
 
   // Generate SVG path data for horizontal wave shapes that tile vertically
   // Creates smooth sinusoidal waves spanning the screen width, repeating for seamless vertical looping
@@ -199,7 +267,6 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
     <View style={styles.container}>
       {/* Sand layer - always at bottom */}
       <LinearGradient colors={['#F4E4C1', '#E6D5A8', '#D4C59A']} style={styles.sand} />
-      {/*TO DO: change the straight line division from sand to sea to a wave form*/}
       {/* Ocean water layer - animated height */}
       <Animated.View
         style={[
@@ -217,7 +284,7 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
 
         {/* 4 overlapping SVG wave layers for vertical parallax motion */}
         {/* Waves move downward simulating water rolling onto sand from overhead view */}
-        {/* TO DO: the animation once finishes, should play itself reverse and continue with this loop */}
+        {/* Animation uses yo-yo pattern: plays forward then reverse in continuous loop */}
         {/* Wave 4: Darkest layer (#005a99) - slowest movement, deepest water */}
         <Animated.View
           style={[
@@ -262,8 +329,8 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
             <Path d={generateWavePath(25, 2, SCREEN_HEIGHT * 0.3)} fill="#a2d9ff" />
           </Svg>
         </Animated.View>
-        {/*TO DO: The lightest layer should never reach the top of the screen during the loop, unless the tide level is below 20% */}
         {/* Wave 1: Lightest layer (#d4f1ff) - fastest movement, closest to shore */}
+        {/* Constrained based on tide level: only reaches top when tideLevel < 20% */}
         <Animated.View
           style={[
             styles.svgWaveLayer,
@@ -277,6 +344,22 @@ export const TideBackground: React.FC<TideBackgroundProps> = ({ tideLevel }) => 
             <Path d={generateWavePath(30, 1.5, SCREEN_HEIGHT * 0.45)} fill="#d4f1ff" />
           </Svg>
         </Animated.View>
+
+      </Animated.View>
+
+      {/* Bottom edge wave - creates wavy transition from sea to sand */}
+      {/* Positioned outside waterContainer to allow overflow, follows water height */}
+      <Animated.View
+        style={[
+          styles.bottomEdgeWaveContainer,
+          {
+            top: waterHeight,
+          },
+        ]}
+      >
+        <Svg height={60} width={SCREEN_WIDTH} style={styles.bottomEdgeWave}>
+          <Path d={generateBottomEdgeWavePath(25, 3)} fill="#d4f1ff" />
+        </Svg>
       </Animated.View>
     </View>
   );
@@ -295,7 +378,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    overflow: 'hidden',
+    overflow: 'hidden', // Contain wave layers within water area
   },
   svgWaveLayer: {
     position: 'absolute',
@@ -306,5 +389,16 @@ const styles = StyleSheet.create({
   },
   svgContainer: {
     position: 'absolute',
+  },
+  bottomEdgeWaveContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    height: 60,
+    marginTop: -30, // Overlap with the water container to create seamless wave edge
+  },
+  bottomEdgeWave: {
+    position: 'absolute',
+    top: 0,
   },
 });
