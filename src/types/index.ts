@@ -12,6 +12,15 @@ export interface TideStation {
 }
 
 /**
+ * Represents a tide event (high or low tide)
+ */
+export interface TideEvent {
+  time: Date;
+  type: 'high' | 'low';
+  height: number; // in meters
+}
+
+/**
  * Represents tide data for a specific time
  * tideLevel: 0-100 where 0 is lowest tide and 100 is highest tide
  * This numeric value directly controls the wave animation position:
@@ -24,4 +33,6 @@ export interface TideData {
   tideLevel: number; // 0-100
   height: number; // in meters
   type: 'high' | 'low' | 'rising' | 'falling';
+  currentTideEvent?: TideEvent; // The current or most recent tide event
+  nextTideEvent?: TideEvent; // The upcoming tide event
 }
