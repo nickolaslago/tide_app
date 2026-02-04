@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, Platform } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { TideStation, TideData } from '../types';
@@ -20,6 +20,18 @@ interface StationDisplayProps {
  * The component adapts across platforms while maintaining the glass aesthetic.
  */
 export const StationDisplay: React.FC<StationDisplayProps> = ({ station, tideData }) => {
+  // Real-time clock state
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update clock every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, []);
+
   const getTideStatusText = () => {
     switch (tideData.type) {
       case 'high':
@@ -46,6 +58,36 @@ export const StationDisplay: React.FC<StationDisplayProps> = ({ station, tideDat
     }
   };
 
+  // Format time in 12-hour format with AM/PM
+  const formatTime = (date: Date): string => {
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
+
+  // Calculate time difference in hours and minutes
+  const getTimeUntil = (targetTime: Date): string => {
+    const now = new Date();
+    const diffMs = targetTime.getTime() - now.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (diffHours > 0) {
+      return `in ${diffHours}h ${diffMinutes}m`;
+    } else if (diffMinutes > 0) {
+      return `in ${diffMinutes}m`;
+    } else {
+      return 'now';
+    }
+  };
+
+  // Format tide event text
+  const formatTideEvent = (type: 'high' | 'low'): string => {
+    return type === 'high' ? 'High tide' : 'Low tide';
+  };
+
   return (
     <View style={styles.container}>
       {/* Glass effect container */}
@@ -54,6 +96,9 @@ export const StationDisplay: React.FC<StationDisplayProps> = ({ station, tideDat
         tint="light"
         style={styles.glassContainer}
       >
+        {/* Clock display */}
+        <Text style={styles.clockTime}>🕐 {formatTime(currentTime)}</Text>
+
         {/* Station name - large and prominent */}
         <Text style={styles.stationName}>{station.name}</Text>
 
@@ -78,6 +123,31 @@ export const StationDisplay: React.FC<StationDisplayProps> = ({ station, tideDat
             <Text style={styles.tideLabel}>Level:</Text>
             <Text style={styles.tideValue}>{tideData.tideLevel}%</Text>
           </View>
+
+          {/* Current tide event */}
+          {tideData.currentTideEvent && (
+            <View style={styles.tideRow}>
+              <Text style={styles.tideLabel}>Current:</Text>
+              <Text style={styles.tideValue}>
+                {formatTideEvent(tideData.currentTideEvent.type)} at{' '}
+                {formatTime(tideData.currentTideEvent.time)}
+              </Text>
+            </View>
+          )}
+
+          {/* Next tide event */}
+          {tideData.nextTideEvent && (
+            <View style={styles.tideRow}>
+              <Text style={styles.tideLabel}>Next:</Text>
+              <Text style={styles.tideValue}>
+                {formatTideEvent(tideData.nextTideEvent.type)} at{' '}
+                {formatTime(tideData.nextTideEvent.time)}{' '}
+                <Text style={styles.timeUntil}>
+                  ({getTimeUntil(tideData.nextTideEvent.time)})
+                </Text>
+              </Text>
+            </View>
+          )}
         </View>
       </BlurView>
     </View>
@@ -114,6 +184,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.3)',
   },
+  clockTime: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#2C2C2C',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
   stationName: {
     fontSize: 32,
     fontWeight: '700',
@@ -145,5 +222,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
     color: '#357ABD',
+  },
+  timeUntil: {
+    fontSize: 13,
+    fontWeight: '400',
+    color: '#6A6A6A',
+    fontStyle: 'italic',
   },
 });
